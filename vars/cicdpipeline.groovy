@@ -39,18 +39,20 @@ def call(Map config) {
             
             stage('Package') {
                 when {
-                    expression { env.GIT_BRANCH == 'origin/main' }
+                    expression { env.GIT_BRANCH?.endsWith('main') }
                 }
                 steps {
                     dir("${config.serviceDir}") {
                         withCredentials([usernamePassword(credentialsId: 'DockerHubSim', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_TOKEN')]) {
-                        sh "echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin"
-                        sh "docker build -t ${config.imageName}:latest --tag ${config.imageName}:${config.tag} ."
-                        sh "docker push ${config.imageName}:${config.tag}"
-                    }
+                            sh "echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin"
+                            sh "docker build -t ${config.imageName}:latest --tag ${config.imageName}:${config.tag} ."
+                            sh "docker push ${config.imageName}:${config.tag}"
+                            sh "docker logout"
+                        }
                     }
                 }
             }
+
 
             stage('Deploy') {
               when {
