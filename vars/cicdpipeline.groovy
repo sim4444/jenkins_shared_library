@@ -37,40 +37,40 @@ def call(Map config) {
 
 
             
-            stage('Deploy') {
+            stage('Package') {
                 when {
-                    expression { return params.DEPLOY == true }
+                    expression { env.GIT_BRANCH?.endsWith('main') }
                 }
                 steps {
-                    sshagent(['ssh-to-3855vm1']) {
-                        sh '''
-                            python3 -m venv venv
-                            ./venv/bin/pip install ansible
-                            ANSIBLE_HOST_KEY_CHECKING=False ./venv/bin/ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
-                        '''
+                    dir("${config.serviceDir}") {
+                        withCredentials([usernamePassword(credentialsId: 'DockerHubPass', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_TOKEN')]) {
+                            sh "echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin"
+                            sh "docker build -t ${config.imageName}:latest --tag ${config.imageName}:${config.tag} ."
+                            sh "docker push ${config.imageName}:${config.tag}"
+                            sh "docker logout"
+                        }
                     }
                 }
             }
 
 
 
-
             stage('Deploy') {
-              when {
-                expression { return params.DEPLOY == true }
-              }
-              steps {
-                sshagent(['ssh-to-3855vm1']) {
-                 sh '''
-                  python3 -m venv venv
-                  ./venv/bin/pip install ansible
-                  ANSIBLE_HOST_KEY_CHECKING=False ./venv/bin/ansible-playbook -i /home/azureuser/ansible/inventory.ini /home/azureuser/ansible/playbook.yml
-                '''
+                when {
+                    expression { return params.DEPLOY == true }
                 }
-              }
-            }
+                steps {
+                    sshagent(['ssh-to-3855vm1']) {
+                    sh '''
+                    python3 -m venv venv
+                    ./venv/bin/pip install ansible
+                    ANSIBLE_HOST_KEY_CHECKING=False ./venv/bin/ansible-playbook -i /home/azureuser/ansible/inventory.ini /home/azureuser/ansible/playbook.yml
+                    '''
+                    }
+                }
+                }
 
-        }
+            }
 
         parameters {
             booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Trigger Deploy Stage Manually')
