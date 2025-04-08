@@ -12,18 +12,7 @@ def call(Map config) {
                     }
                 }
             }
-
-
-            // stage('Debug Docker Access') {
-            //     steps {
-            //         dir("${config.serviceDir}") {
-            //         sh 'echo "Current User: $(whoami)"'
-            //         sh 'echo "Group Membership:" && id'
-            //         sh 'echo "Docker Access Test:" && docker ps'
-            //         }
-            //     }
-            // }
-
+        
             stage('Security') {
                 steps {
                     dir("${config.serviceDir}") {
@@ -33,9 +22,6 @@ def call(Map config) {
                     }
                 }
             }
-
-
-
             
             stage('Package') {
                 when {
@@ -52,8 +38,6 @@ def call(Map config) {
                     }
                 }
             }
-
-
 
             stage('Deploy') {
                 when {
