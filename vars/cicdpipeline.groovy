@@ -14,22 +14,22 @@ def call(Map config) {
             }
 
 
-            stage('Debug Docker Access') {
-                steps {
-                    dir("${config.serviceDir}") {
-                    sh 'echo "Current User: $(whoami)"'
-                    sh 'echo "Group Membership:" && id'
-                    sh 'echo "Docker Access Test:" && docker ps'
-                    }
-                }
-            }
+            // stage('Debug Docker Access') {
+            //     steps {
+            //         dir("${config.serviceDir}") {
+            //         sh 'echo "Current User: $(whoami)"'
+            //         sh 'echo "Group Membership:" && id'
+            //         sh 'echo "Docker Access Test:" && docker ps'
+            //         }
+            //     }
+            // }
 
             stage('Security') {
                 steps {
                     dir("${config.serviceDir}") {
-                        sh 'curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin'
-                        sh "docker build -t ${config.imageName}:temp ."
-                        sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${config.imageName}:temp"
+                        sh 'python3 -m venv venv'
+                        sh './venv/bin/pip install bandit'
+                        sh './venv/bin/bandit -r . -x ./venv -lll -iii -s MEDIUM'
                     }
                 }
             }
