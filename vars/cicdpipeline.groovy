@@ -16,12 +16,13 @@ def call(Map config) {
             stage('Security') {
                 steps {
                     dir("${config.serviceDir}") {
-                        sh 'python3 -m venv venv'
-                        sh './venv/bin/pip install bandit'
-                        sh './venv/bin/bandit -r . -x ./venv -lll -iii -s MEDIUM'
+                        sh 'curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin'
+                        sh "docker build -t ${config.imageName}:temp ."
+                        sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${config.imageName}:temp"
                     }
                 }
             }
+
 
 
             
@@ -32,7 +33,7 @@ def call(Map config) {
                 steps {
                     dir("${config.serviceDir}") {
                         withCredentials([string(credentialsId: 'DockerHub', variable: 'TOKEN')]) {
-                            sh "docker login -u 'nbrar1282' -p '$TOKEN' docker.io"
+                            sh "docker login -u 'sim44' -p '$TOKEN' docker.io"
                             sh "docker build -t ${config.imageName}:latest --tag ${config.imageName}:${config.tag} ."
                             sh "docker push ${config.imageName}:${config.tag}"
                         }
