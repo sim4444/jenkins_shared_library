@@ -43,7 +43,7 @@ def call(Map config) {
                 }
                 steps {
                     dir("${config.serviceDir}") {
-                        withCredentials([usernamePassword(credentialsId: 'DockerHubSim', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_TOKEN')]) {
+                        withCredentials([usernamePassword(credentialsId: 'DockerHubPass', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_TOKEN')]) {
                             sh "echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin"
                             sh "docker build -t ${config.imageName}:latest --tag ${config.imageName}:${config.tag} ."
                             sh "docker push ${config.imageName}:${config.tag}"
